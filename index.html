@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jardim &middot; painel de animações</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #08070a;
+      --card: #131017;
+      --card-hover: #1c1822;
+      --line: #2a2430;
+      --text: #efe8f0;
+      --muted: #8a8090;
+      --accent: #e9a9c6;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background:
+        radial-gradient(1200px 600px at 50% -10%, #221a28 0%, transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', ui-monospace, monospace;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 24px 80px;
+    }
+
+    header { margin-bottom: 44px; }
+
+    header .kicker {
+      font-size: 11px;
+      letter-spacing: 5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    header h1 {
+      font-size: clamp(34px, 6vw, 60px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      line-height: 1.05;
+      background: linear-gradient(90deg, #f3c7dd, #c9a6f0 60%, #9ad6c4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .25s ease, border-color .25s ease, background .25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #4a3f55;
+      background: var(--card-hover);
+    }
+
+    .thumb {
+      aspect-ratio: 16 / 10;
+      width: 100%;
+      display: block;
+      border-bottom: 1px solid var(--line);
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+    .thumb canvas { display: block; width: 100%; height: 100%; }
+
+    .thumb .play {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .25s ease;
+      background: rgba(8,7,10,.35);
+    }
+    .card:hover .thumb .play { opacity: 1; }
+    .thumb .play span {
+      border: 1px solid rgba(255,255,255,.6);
+      border-radius: 999px;
+      padding: 9px 20px;
+      font-size: 12px;
+      letter-spacing: 3px;
+      backdrop-filter: blur(2px);
+    }
+
+    .body { padding: 18px 18px 20px; flex: 1; display: flex; flex-direction: column; }
+    .body h2 { font-size: 18px; letter-spacing: 1px; margin-bottom: 8px; }
+    .body p { color: var(--muted); font-size: 12.5px; line-height: 1.55; flex: 1; }
+
+    .tags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--accent);
+      border: 1px solid #3a2f3f;
+      border-radius: 999px;
+      padding: 3px 9px;
+    }
+
+    .actions { margin-top: 16px; display: flex; gap: 10px; }
+    .actions a {
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px dotted #443a4c;
+      padding-bottom: 2px;
+    }
+    .actions a:hover { color: var(--text); border-color: var(--accent); }
+
+    footer {
+      margin-top: 56px;
+      color: #5b5363;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    footer a { color: #7d7488; }
+
+    /* fullscreen viewer */
+    #viewer {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #000;
+      display: none;
+    }
+    #viewer.open { display: block; }
+    #viewer iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+    #viewer .back {
+      position: fixed;
+      top: 16px; left: 16px;
+      z-index: 1001;
+      background: rgba(10,8,12,.6);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: background .2s ease;
+    }
+    #viewer .back:hover { background: rgba(40,30,46,.8); }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+    <header>
+      <div class="kicker">painel &middot; coleção de animações</div>
+      <h1>Jardim</h1>
+      <p>Escolha uma animação e clique para abrir em tela cheia. Tudo roda no navegador, sem instalar nada. Aperte <strong>Esc</strong> para voltar ao painel.</p>
+    </header>
+
+    <main class="grid" id="grid"></main>
+
+    <footer>
+      feito com <a href="https://p5js.org/" target="_blank" rel="noopener">p5.js</a> &middot; HTML/CSS/JS vanilla
+    </footer>
+  </div>
+
+  <div id="viewer">
+    <button class="back" id="back">&larr; voltar</button>
+    <iframe id="frame" title="animação" allow="autoplay; fullscreen"></iframe>
+  </div>
+
+  <script>
+    /* Para adicionar uma animação nova, basta acrescentar um objeto aqui. */
+    const ANIMATIONS = [
+      {
+        file: 'peonia-plus.html',
+        title: 'Peonia+',
+        desc: 'Versão estendida: pétalas que caem, pólen flutuando, trilha sonora generativa e halo de luz. Clique para soltar pétalas, scroll muda a densidade.',
+        tags: ['3D', 'áudio', 'pétalas', 'interativa'],
+        accent: ['#e9a9c6', '#c9a6f0']
+      },
+      {
+        file: 'peonia.html',
+        title: 'Peonia',
+        desc: 'A original. Peônia 3D que floresce e se marchita, ciclando entre render ascii, pontos e pixels, com glitch de vez em quando.',
+        tags: ['3D', 'ascii', 'glitch'],
+        accent: ['#c77', '#e9b']
+      }
+    ];
+
+    const grid    = document.getElementById('grid');
+    const viewer  = document.getElementById('viewer');
+    const frame   = document.getElementById('frame');
+    const backBtn = document.getElementById('back');
+
+    function openAnim(file) {
+      frame.src = file;
+      viewer.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeViewer() {
+      viewer.classList.remove('open');
+      frame.src = 'about:blank';
+      document.body.style.overflow = '';
+    }
+
+    backBtn.addEventListener('click', closeViewer);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
+
+    /* small animated preview so cada card tem vida, sem rodar o sketch inteiro */
+    function makePreview(canvas, accent) {
+      const ctx = canvas.getContext('2d');
+      let W, H, dpr;
+      function resize() {
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        const r = canvas.getBoundingClientRect();
+        W = canvas.width  = Math.max(1, Math.floor(r.width  * dpr));
+        H = canvas.height = Math.max(1, Math.floor(r.height * dpr));
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const cell = 9 * dpr;
+      let t = Math.random() * 100;
+      const c1 = hexToRgb(accent[0]), c2 = hexToRgb(accent[1]);
+
+      function frameLoop() {
+        if (!canvas.isConnected) return;
+        t += 0.018;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, H);
+        const cx = W / 2, cy = H / 2;
+        const petals = 7, rings = 6;
+        for (let ring = rings; ring >= 1; ring--) {
+          const rr = ring / rings;
+          const rad = rr * Math.min(W, H) * 0.4 * (0.85 + 0.15 * Math.sin(t + ring));
+          const n = petals + ring;
+          for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2 + ring * 0.4 + t * 0.3;
+            const px = cx + Math.cos(a) * rad;
+            const py = cy + Math.sin(a) * rad * 0.92;
+            const b = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(a * 2 + t));
+            const r = Math.round((c1[0] + (c2[0]-c1[0]) * rr) * b);
+            const g = Math.round((c1[1] + (c2[1]-c1[1]) * rr) * b);
+            const bl = Math.round((c1[2] + (c2[2]-c1[2]) * rr) * b);
+            const sz = cell * (0.5 + rr * 0.6);
+            ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + bl + ')';
+            ctx.fillRect(Math.round(px - sz/2), Math.round(py - sz/2), Math.round(sz), Math.round(sz));
+          }
+        }
+        requestAnimationFrame(frameLoop);
+      }
+      requestAnimationFrame(frameLoop);
+    }
+
+    function hexToRgb(h) {
+      const n = parseInt(h.slice(1), 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+
+    ANIMATIONS.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<div class="thumb"><canvas></canvas><div class="play"><span>ABRIR</span></div></div>' +
+        '<div class="body">' +
+          '<h2>' + a.title + '</h2>' +
+          '<p>' + a.desc + '</p>' +
+          '<div class="tags">' + a.tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</div>' +
+          '<div class="actions">' +
+            '<a href="' + a.file + '" target="_blank" rel="noopener" data-stop>abrir em nova aba &nearr;</a>' +
+          '</div>' +
+        '</div>';
+
+      card.addEventListener('click', () => openAnim(a.file));
+      card.querySelectorAll('[data-stop]').forEach(el =>
+        el.addEventListener('click', e => e.stopPropagation()));
+
+      grid.appendChild(card);
+      makePreview(card.querySelector('canvas'), a.accent);
+    });
+  </script>
+</body>
+</html>

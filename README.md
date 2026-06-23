@@ -4,7 +4,9 @@ Una animación interactiva de una peonía hecha con p5.js. Corre directo en el n
 
 ## Cómo usarlo
 
-Abrís `peonia.html` en el navegador y listo. No necesita servidor, no necesita npm, no necesita nada.
+Abrí `index.html` en el navegador: es un panel/galería donde elegís la animación con un click y se abre a pantalla completa (Esc para volver). Para agregar una animación nueva, sumá un objeto al array `ANIMATIONS` dentro de `index.html`.
+
+También podés abrir cada animación directo: `peonia.html` o `peonia-plus.html`. No necesita servidor, no necesita npm, no necesita nada.
 
 ## Versión plus
 
