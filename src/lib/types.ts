@@ -8,9 +8,10 @@ export type RadarRow = {
   weightVwra: number | null;
 
   date: string | null;
-  close: number | null;
-  ath: number | null;
-  atl52w: number | null;
+  close: number | null; // USD
+  ath: number | null; // USD
+  atl52w: number | null; // USD
+  fxToUsd: number | null; // USD por 1 unidade da moeda nativa
   pctFromAth: number | null; // <= 0  (0 = no ATH)
   pctFromLow: number | null; // >= 0
 

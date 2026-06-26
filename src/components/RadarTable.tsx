@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-table";
 import type { RadarRow } from "@/lib/types";
 import { Sparkline } from "@/components/Sparkline";
+import { TickerDetail } from "@/components/TickerDetail";
 import { athHeat, fmtMoney, fmtNum, fmtPct, fmtSignedPct } from "@/lib/format";
 
 const col = createColumnHelper<RadarRow>();
@@ -36,6 +37,7 @@ export function RadarTable({ rows }: { rows: RadarRow[] }) {
     { id: "weightVwra", desc: true },
   ]);
   const [filter, setFilter] = useState("");
+  const [selected, setSelected] = useState<RadarRow | null>(null);
 
   const columns = useMemo(
     () => [
@@ -60,10 +62,15 @@ export function RadarTable({ rows }: { rows: RadarRow[] }) {
         ),
       }),
       col.accessor("close", {
-        header: () => numHeader("Preço"),
+        header: () => numHeader("Preço (USD)"),
         cell: (c) => (
           <div className="text-right tabular-nums text-slate-200">
-            {fmtMoney(c.getValue(), c.row.original.currency ?? "USD")}
+            {fmtMoney(c.getValue(), "USD")}
+            {c.row.original.currency && c.row.original.currency !== "USD" ? (
+              <span className="ml-1 text-[10px] text-slate-500">
+                {c.row.original.currency}
+              </span>
+            ) : null}
           </div>
         ),
       }),
@@ -211,7 +218,8 @@ export function RadarTable({ rows }: { rows: RadarRow[] }) {
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-t border-ink-700/60 hover:bg-ink-800/40 transition-colors"
+                onClick={() => setSelected(row.original)}
+                className="border-t border-ink-700/60 hover:bg-ink-800/40 transition-colors cursor-pointer"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-3 py-2 align-middle whitespace-nowrap">
@@ -225,8 +233,13 @@ export function RadarTable({ rows }: { rows: RadarRow[] }) {
       </div>
 
       <div className="text-xs text-slate-500">
-        {table.getRowModel().rows.length} de {rows.length} empresas
+        {table.getRowModel().rows.length} de {rows.length} empresas · clique numa
+        linha para o detalhe
       </div>
+
+      {selected ? (
+        <TickerDetail row={selected} onClose={() => setSelected(null)} />
+      ) : null}
     </div>
   );
 }

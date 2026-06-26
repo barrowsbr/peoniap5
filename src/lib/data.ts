@@ -46,6 +46,7 @@ export async function getRadarData(): Promise<RadarData> {
       close: s?.close ?? null,
       ath: s?.ath ?? null,
       atl52w: s?.atl52w ?? null,
+      fxToUsd: s?.fxToUsd ?? null,
       pctFromAth: s?.pctFromAth ?? null,
       pctFromLow: s?.pctFromLow ?? null,
       peRatio: s?.peRatio ?? null,

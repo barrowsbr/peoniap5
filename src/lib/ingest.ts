@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { tickers, dailySnapshots, type NewSnapshot } from "@/db/schema";
 import { fetchPrice } from "@/lib/sources/yahoo";
 import { fetchFundamentals } from "@/lib/sources/fmp";
-import { fmpSymbolOf } from "@/config/holdings";
+import { fetchFxRates, rateFor } from "@/lib/sources/fx";
 import { pctFromAth, pctFromLow, rsi } from "@/lib/metrics";
 
 export type IngestResult = {
@@ -31,6 +31,9 @@ export async function runIngestion(): Promise<IngestResult> {
     return { ok: false, date: null, processed: 0, priceOk: 0, fundamentalsOk: 0, errors: ["tabela tickers vazia — rode db:seed"] };
   }
 
+  // Câmbio para USD (1 fetch por moeda distinta).
+  const fx = await fetchFxRates(universe.map((t) => t.currency));
+
   let priceOk = 0;
   let fundamentalsOk = 0;
   let snapshotDate: string | null = null;
@@ -53,12 +56,20 @@ export async function runIngestion(): Promise<IngestResult> {
           const date = price.asOf;
           if (!snapshotDate) snapshotDate = date;
 
+          // Normaliza preço/ATH/mínima/sparkline para USD.
+          const rate = rateFor(fx, t.currency);
+          const closeUsd = price.close * rate;
+          const athUsd = price.ath * rate;
+          const atlUsd = price.atl52w * rate;
+          const sparkUsd = price.spark.map((v) => +(v * rate).toFixed(4));
+
           const snap: NewSnapshot = {
             tickerId: t.id,
             date,
-            close: price.close,
-            ath: price.ath,
-            atl52w: price.atl52w,
+            close: closeUsd,
+            ath: athUsd,
+            atl52w: atlUsd,
+            fxToUsd: rate,
             pctFromAth: pctFromAth(price.close, price.ath),
             pctFromLow: pctFromLow(price.close, price.atl52w),
             peRatio: fund?.peRatio ?? null,
@@ -67,7 +78,7 @@ export async function runIngestion(): Promise<IngestResult> {
             netMargin: fund?.netMargin ?? null,
             debtToEquity: fund?.debtToEquity ?? null,
             rsi14: rsi(price.spark),
-            spark: JSON.stringify(price.spark.slice(-180)),
+            spark: JSON.stringify(sparkUsd.slice(-180)),
           };
 
           await db!
@@ -79,6 +90,7 @@ export async function runIngestion(): Promise<IngestResult> {
                 close: snap.close,
                 ath: snap.ath,
                 atl52w: snap.atl52w,
+                fxToUsd: snap.fxToUsd,
                 pctFromAth: snap.pctFromAth,
                 pctFromLow: snap.pctFromLow,
                 peRatio: snap.peRatio,

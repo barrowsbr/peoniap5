@@ -39,9 +39,12 @@ export const dailySnapshots = pgTable(
       .references(() => tickers.id, { onDelete: "cascade" }),
     date: date("date").notNull(),
 
+    // Valores em USD (normalizados na ingestão). fxToUsd = USD por 1 unidade da
+    // moeda nativa no dia (1 para papéis em USD).
     close: real("close"),
     ath: real("ath"),
     atl52w: real("atl_52w"),
+    fxToUsd: real("fx_to_usd"),
 
     // Derivados (gravados na ingestão para ordenar/indexar barato):
     pctFromAth: real("pct_from_ath"), // (close-ath)/ath  -> <= 0

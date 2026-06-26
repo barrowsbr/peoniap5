@@ -62,6 +62,7 @@ export function mockRows(): RadarRow[] {
       close,
       ath,
       atl52w,
+      fxToUsd: 1, // mock já está "em USD"
       pctFromAth: pctFromAth(close, ath),
       pctFromLow: pctFromLow(close, atl52w),
       peRatio: +(8 + r() * 45).toFixed(1),

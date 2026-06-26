@@ -114,9 +114,10 @@ nos fundamentos.
 - **ATH** = máxima histórica real, em base de fechamento ajustado.
 - **Holdings** = atualização **manual mensal** (`src/config/holdings.ts`). Mais
   confiável que scrapear o PDF da Vanguard.
-- **Moeda**: o snapshot guarda o preço como vem do Yahoo (nativo p/ intl). A UI
-  exibe na moeda nativa do papel — **normalização cambial para USD é um TODO**
-  (precisa de uma fonte de FX no pipeline).
+- **Moeda**: preços são **normalizados para USD** na ingestão (par `<CUR>USD=X` do
+  Yahoo), com a taxa guardada em `fx_to_usd`. Usa-se a taxa atual para a série
+  histórica — como `pct_from_ath` é uma razão na mesma moeda, ela não muda; só o
+  valor absoluto em USD do ATH/série é aproximado.
 
 > ⚠️ A lista em `src/config/holdings.ts` é uma **aproximação** das 50 maiores e
 > traz pesos PLACEHOLDER. Reconcilie com o arquivo oficial de holdings da Vanguard
@@ -151,8 +152,16 @@ src/
     ingest-local.ts           npm run ingest
 ```
 
+## Drill-down
+
+Clique em qualquer linha para abrir o detalhe: **candlestick de 1 ano** (OHLC
+buscado sob demanda do Yahoo em `/api/ticker/[symbol]/candles`, convertido para
+USD), cards de fundamentos e **histórico de fundamentos** (de
+`/api/ticker/[symbol]/history`, que cresce a cada ingestão diária). Sem rede/sem
+banco, cai num fallback sintético a partir da sparkline.
+
 ## Roadmap restante
 
-- **Drill-down** ao clicar numa linha (candle maior + histórico de fundamentos).
-- Normalização cambial para USD.
 - Backfill de histórico para gráficos mais longos.
+- Taxa de câmbio histórica (hoje usa a atual para toda a série).
+- Mais sinais técnicos (médias móveis, bandas) se quiser.
